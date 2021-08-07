@@ -92,6 +92,9 @@ func NewKNN(params model.Params) *KNN {
 
 func (knn *KNN) Fit(trainSet, valSet *DataSet, config *FitConfig) Score {
 	config = config.LoadDefaultIfNil()
+	if config.Tracker != nil {
+		config.Tracker.Start(trainSet.ItemCount())
+	}
 	knn.ItemIndex = trainSet.ItemIndex
 	base.Logger().Info("fit knn",
 		zap.Any("params", knn.GetParams()),
@@ -154,6 +157,9 @@ func (knn *KNN) Fit(trainSet, valSet *DataSet, config *FitConfig) Score {
 	evalStart := time.Now()
 	scores := Evaluate(knn, valSet, trainSet, config.TopK, config.Candidates, config.Jobs, NDCG, Precision, Recall)
 	evalTime := time.Since(evalStart)
+	if config.Tracker != nil {
+		config.Tracker.Finish()
+	}
 	base.Logger().Info("fit knn complete",
 		zap.Float32(fmt.Sprintf("NDCG@%v", config.TopK), scores[0]),
 		zap.Float32(fmt.Sprintf("Precision@%v", config.TopK), scores[1]),

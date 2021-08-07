@@ -25,7 +25,7 @@ import (
 	"time"
 )
 
-func TestMaster_FindNeighbor(t *testing.T) {
+func TestMaster_RunFindNeighborsTask(t *testing.T) {
 	// create mock master
 	m := newMockMaster(t)
 	defer m.Close()
@@ -69,21 +69,21 @@ func TestMaster_FindNeighbor(t *testing.T) {
 
 	// similar items (common users)
 	m.GorseConfig.Recommend.NeighborType = config.NeighborTypeRelated
-	m.similar(dataset)
+	m.runFindNeighborsTask(dataset)
 	similar, err := m.CacheClient.GetScores(cache.SimilarItems, "9", 0, 100)
 	assert.NoError(t, err)
 	assert.Equal(t, []string{"8", "7", "6"}, cache.RemoveScores(similar))
 
 	// similar items (common labels)
 	m.GorseConfig.Recommend.NeighborType = config.NeighborTypeSimilar
-	m.similar(dataset)
+	m.runFindNeighborsTask(dataset)
 	similar, err = m.CacheClient.GetScores(cache.SimilarItems, "8", 0, 100)
 	assert.NoError(t, err)
 	assert.Equal(t, []string{"0", "1", "2"}, cache.RemoveScores(similar))
 
 	// similar items (auto)
 	m.GorseConfig.Recommend.NeighborType = config.NeighborTypeAuto
-	m.similar(dataset)
+	m.runFindNeighborsTask(dataset)
 	similar, err = m.CacheClient.GetScores(cache.SimilarItems, "8", 0, 100)
 	assert.NoError(t, err)
 	assert.Equal(t, []string{"0", "1", "2"}, cache.RemoveScores(similar))

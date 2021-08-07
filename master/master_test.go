@@ -38,6 +38,7 @@ func (m *mockMaster) Close() {
 
 func newMockMaster(t *testing.T) *mockMaster {
 	s := new(mockMaster)
+	s.taskMonitor = NewTaskMonitor()
 	// create mock database
 	var err error
 	s.dataStoreServer, err = miniredis.Run()
@@ -52,7 +53,7 @@ func newMockMaster(t *testing.T) *mockMaster {
 	return s
 }
 
-func TestMaster_CollectLatest(t *testing.T) {
+func TestMaster_RunFindLatestItemsTask(t *testing.T) {
 	// create mock master
 	m := newMockMaster(t)
 	defer m.Close()
@@ -72,7 +73,7 @@ func TestMaster_CollectLatest(t *testing.T) {
 		{"8", time.Date(2008, 1, 1, 1, 1, 0, 0, time.UTC), []string{"even"}, ""},
 		{"9", time.Date(2009, 1, 1, 1, 1, 0, 0, time.UTC), []string{"odd"}, ""},
 	}
-	m.latest(items)
+	m.runFindLatestItemsTask(items)
 	// check latest items
 	latest, err := m.CacheClient.GetScores(cache.LatestItems, "", 0, 100)
 	assert.NoError(t, err)
@@ -97,7 +98,7 @@ func TestMaster_CollectLatest(t *testing.T) {
 	//}, latest)
 }
 
-func TestMaster_CollectPopItem(t *testing.T) {
+func TestMaster_RunFindPopularItemsTask(t *testing.T) {
 	// create mock master
 	m := newMockMaster(t)
 	defer m.Close()
@@ -139,7 +140,7 @@ func TestMaster_CollectPopItem(t *testing.T) {
 			Timestamp: time.Now().AddDate(-100, 0, 0),
 		})
 	}
-	m.popItem(items, feedbacks)
+	m.runFindPopularItemsTask(items, feedbacks)
 	// check popular items
 	popular, err := m.CacheClient.GetScores(cache.PopularItems, "", 0, 100)
 	assert.NoError(t, err)
